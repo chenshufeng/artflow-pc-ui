@@ -21,10 +21,7 @@ export const useImageStore = defineStore('image', {
       try {
         const response = await axios.get('/sd/file/pcList', {
           params: {
-            page: this.page,
             pageNum: this.page,
-            pageIndex: this.page,
-            limit: this.limit,
             pageSize: this.limit
           }
         })
@@ -45,10 +42,7 @@ export const useImageStore = defineStore('image', {
       try {
         const response = await axios.get('/sd/file/pcList', {
           params: {
-            page: this.page,
             pageNum: this.page,
-            pageIndex: this.page,
-            limit: this.limit,
             pageSize: this.limit
           }
         })
