@@ -6,7 +6,7 @@
         v-for="(image, index) in images"
         :key="image.id"
       >
-        <div class="image-wrapper">
+        <div class="image-wrapper" @click="openViewer(index)">
           <img
             :src="image.thumbnail"
             :data-src="image.url"
@@ -27,18 +27,28 @@
     </div>
     <button v-else-if="hasMoreImages" class="load-more-btn" @click="loadMoreImages">加载更多</button>
     <p v-else class="no-more-images">没有更多图片了</p>
+
+    <ImageViewer
+      v-if="viewerVisible"
+      :images="images"
+      :startIndex="viewerIndex"
+      @close="viewerVisible = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import { useImageStore } from '../stores/imageStore'
+import ImageViewer from './ImageViewer.vue'
 
 const imageStore = useImageStore()
 const images = ref([])
 const isLoadingMore = ref(false)
 const hasMoreImages = ref(true)
 const visibleImages = ref(0)
+const viewerVisible = ref(false)
+const viewerIndex = ref(0)
 
 onMounted(() => {
   loadImages()
@@ -113,6 +123,11 @@ const handleScroll = () => {
 
 onMounted(() => { window.addEventListener('scroll', handleScroll) })
 onUnmounted(() => { window.removeEventListener('scroll', handleScroll) })
+
+const openViewer = i => {
+  viewerIndex.value = i
+  viewerVisible.value = true
+}
 </script>
 
 <style scoped>
@@ -139,17 +154,28 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll) })
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   aspect-ratio: 1 / 1;
 }
+.image-item:hover .image-wrapper {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
 
 .grid-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.5s ease, transform 0.3s ease-in-out;
   opacity: 0;
+  transform-origin: center center;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0) scale(1);
 }
 
 .grid-image.loaded {
   opacity: 1;
+}
+
+.image-item:hover .grid-image {
+  transform: translateZ(0) scale(1.1);
 }
 
 .image-overlay {
