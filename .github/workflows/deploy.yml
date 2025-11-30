@@ -17,6 +17,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,8 +28,10 @@ jobs:
       - name: Configure env for Vite base
         run: echo "VITE_BASE=/${{ github.event.repository.name }}/" > .env
       - name: Configure production API base (optional)
-        if: ${{ secrets.VITE_API_BASE != '' }}
-        run: echo "VITE_API_BASE=${{ secrets.VITE_API_BASE }}" > .env.production
+        run: |
+          if [ -n "${VITE_API_BASE}" ]; then
+            echo "VITE_API_BASE=${VITE_API_BASE}" > .env.production
+          fi
       - run: npm install
       - run: npm run build
       - name: Add SPA fallback
