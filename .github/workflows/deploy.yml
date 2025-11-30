@@ -32,6 +32,8 @@ jobs:
           if [ -n "${VITE_API_BASE}" ]; then
             echo "VITE_API_BASE=${VITE_API_BASE}" > .env.production
           fi
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
       - run: npm install
       - run: npm run build
       - name: Add SPA fallback
