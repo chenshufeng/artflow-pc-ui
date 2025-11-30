@@ -21,9 +21,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: 'npm'
-      - run: npm ci
+      - name: Configure env for Vite base
+        run: echo "VITE_BASE=/${{ github.event.repository.name }}/" > .env
+      - name: Configure production API base (optional)
+        if: ${{ secrets.VITE_API_BASE != '' }}
+        run: echo "VITE_API_BASE=${{ secrets.VITE_API_BASE }}" > .env.production
+      - run: npm install
       - run: npm run build
       - name: Add SPA fallback
         run: cp dist/index.html dist/404.html
