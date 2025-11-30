@@ -26,7 +26,13 @@ jobs:
           node-version: 20
           cache: 'npm'
       - name: Configure env for Vite base
-        run: echo "VITE_BASE=/${{ github.event.repository.name }}/" > .env
+        run: |
+          REPO="${{ github.event.repository.name }}"
+          if [[ "$REPO" == *.github.io ]]; then
+            echo "VITE_BASE=/" > .env
+          else
+            echo "VITE_BASE=/$REPO/" > .env
+          fi
       - name: Configure production API base (optional)
         run: |
           if [ -n "${VITE_API_BASE}" ]; then
