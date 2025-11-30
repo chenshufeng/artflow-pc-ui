@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 export const useImageStore = defineStore('image', {
   state: () => ({
@@ -19,16 +20,24 @@ export const useImageStore = defineStore('image', {
       this.isLoading = true
       this.error = null
       try {
-        const response = await axios.get('/sd/file/pcList', {
-          params: {
-            pageNum: this.page,
-            pageSize: this.limit
-          }
-        })
-        const { items, total } = this.normalizeItems(response.data, this.page, this.limit)
-        this.images = items
-        this.totalImages = total ?? items.length
-        this.page = this.page + 1
+        if (import.meta.env.PROD && !API_BASE) {
+          const mockData = this.generateMockImages(this.page, this.limit)
+          this.images = mockData.images
+          this.totalImages = mockData.total
+          this.page = this.page + 1
+        } else {
+          const url = API_BASE ? `${API_BASE}/sd/file/pcList` : '/sd/file/pcList'
+          const response = await axios.get(url, {
+            params: {
+              pageNum: this.page,
+              pageSize: this.limit
+            }
+          })
+          const { items, total } = this.normalizeItems(response.data, this.page, this.limit)
+          this.images = items
+          this.totalImages = total ?? items.length
+          this.page = this.page + 1
+        }
       } catch (err) {
         this.error = 'Failed to fetch images. Please try again later.'
         console.error('Error fetching images:', err)
@@ -40,16 +49,24 @@ export const useImageStore = defineStore('image', {
       if (this.isLoading || !this.hasMore) return
       this.isLoading = true
       try {
-        const response = await axios.get('/sd/file/pcList', {
-          params: {
-            pageNum: this.page,
-            pageSize: this.limit
-          }
-        })
-        const { items, total } = this.normalizeItems(response.data, this.page, this.limit)
-        this.images = [...this.images, ...items]
-        if (total != null) this.totalImages = total
-        this.page = this.page + 1
+        if (import.meta.env.PROD && !API_BASE) {
+          const mockData = this.generateMockImages(this.page, this.limit)
+          this.images = [...this.images, ...mockData.images]
+          this.totalImages = mockData.total
+          this.page = this.page + 1
+        } else {
+          const url = API_BASE ? `${API_BASE}/sd/file/pcList` : '/sd/file/pcList'
+          const response = await axios.get(url, {
+            params: {
+              pageNum: this.page,
+              pageSize: this.limit
+            }
+          })
+          const { items, total } = this.normalizeItems(response.data, this.page, this.limit)
+          this.images = [...this.images, ...items]
+          if (total != null) this.totalImages = total
+          this.page = this.page + 1
+        }
       } catch (err) {
         this.error = 'Failed to load more images. Please try again later.'
         console.error('Error fetching more images:', err)
@@ -63,7 +80,8 @@ export const useImageStore = defineStore('image', {
       const startId = (page - 1) * limit + 1
       const items = (Array.isArray(list) ? list : []).map((it, i) => {
         const fileName = it.fileName || it.filename || it.name
-        const builtUrl = fileName ? `/sd/file/download?fileName=${encodeURIComponent(fileName)}` : undefined
+        const base = API_BASE ? `${API_BASE}` : ''
+        const builtUrl = fileName ? `${base}/sd/file/download?fileName=${encodeURIComponent(fileName)}` : undefined
         const url = it.url || it.src || it.path || it.downloadUrl || it.fileUrl || builtUrl
         const thumbnail = it.thumbnail || it.thumbUrl || it.thumb || url
         const width = it.width || it.w || it.imageWidth || 800
